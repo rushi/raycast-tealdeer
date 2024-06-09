@@ -2,8 +2,8 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "tealdeer",
   "title": "Tealdeer",
-  "description": "Do tealdeer stuff in Raycast",
-  "icon": "command-icon.png",
+  "description": "Search tealdeer (faster tldr) pages. Quick command cheatsheets",
+  "icon": "tealdeer.png",
   "author": "rushi",
   "categories": [
     "Developer Tools"
@@ -17,7 +17,7 @@
       "name": "index",
       "title": "Search Pages",
       "subtitle": "tealdeer",
-      "description": "Search cheatsheets from the TLDR reference list and your custom ones",
+      "description": "Search cheatsheets from the TLDR reference list and your custom tealdeer pages",
       "mode": "view"
     }
   ],
