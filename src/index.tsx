@@ -11,7 +11,6 @@ import {
 } from "@raycast/api";
 import degit from "degit";
 import fs, { existsSync, readdirSync } from "fs";
-import { rm } from "fs/promises";
 import { globby } from "globby";
 import { parse, resolve } from "path";
 import { useEffect, useState } from "react";

@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "tealdeer",
-  "title": "tealdeer",
+  "title": "Tealdeer",
   "description": "Do tealdeer stuff in Raycast",
   "icon": "command-icon.png",
   "author": "rushi",
