@@ -24,7 +24,7 @@ const TEALDEER_PATH = `${process.env.HOME}/.config/tealdeer/pages`;
 const TEALDEER_CACHE_DIR = CACHE_DIR + "/tealdeer";
 
 async function refreshPages() {
-    // await rm(resolve(CACHE_DIR), { recursive: true, force: true }); // For testing only
+    // await rm(resolve(CACHE_DIR), { recursive: true, force: true }); // For testing only, import rm from fs/promises
     await showToast(Toast.Style.Animated, "Fetching TLDR Pages...");
     try {
         await showToast(Toast.Style.Animated, "Fetching TLDR Pages from tldr-pages/tldr/pages");
@@ -38,7 +38,7 @@ async function refreshPages() {
     const symlinkDir = getDir(TEALDEER_CACHE_DIR);
     if (!fs.existsSync(TEALDEER_CACHE_DIR)) {
         showToast(Toast.Style.Animated, "Linking tealdeer pages...");
-        await fs.symlinkSync(TEALDEER_PATH, TEALDEER_CACHE_DIR);
+        fs.symlinkSync(TEALDEER_PATH, TEALDEER_CACHE_DIR);
     }
 
     if (fs.existsSync(TEALDEER_CACHE_DIR)) {
@@ -48,8 +48,8 @@ async function refreshPages() {
     }
 }
 
+const platformNames = ["osx", "common", "linux", "windows", "sunos", "android", "tealdeer"];
 async function readPages() {
-    const platformNames = ["osx", "common", "linux", "windows", "sunos", "android", "tealdeer"];
     return await Promise.all(
         platformNames.map(async (platformName) => {
             const filepaths = await globby(`${CACHE_DIR}/${platformName}/*`);
@@ -64,7 +64,7 @@ async function readPages() {
 
 export default function TLDRList(): JSX.Element {
     const [platforms, setPlatforms] = useState<Record<string, Platform>>();
-    const [selectedPlatformName, setSelectedPlatformName] = useState<string>("osx");
+    const [selectedPlatformName, setSelectedPlatformName] = useState<string>(platformNames[0]);
 
     const selectedPlatforms = platforms ? [platforms[selectedPlatformName], platforms["common"]] : undefined;
     if (platforms && selectedPlatforms) {
@@ -76,6 +76,7 @@ export default function TLDRList(): JSX.Element {
         if (!existsSync(CACHE_DIR) || readdirSync(CACHE_DIR).length === 0 || options?.forceRefresh) {
             await refreshPages();
         }
+
         const platforms = await readPages();
         setPlatforms(Object.fromEntries(platforms.map((platform) => [platform.name, platform])));
     }
@@ -87,16 +88,17 @@ export default function TLDRList(): JSX.Element {
     return (
         <List
             isShowingDetail
+            isLoading={!platforms}
             searchBarAccessory={
                 <List.Dropdown tooltip="Platform" storeValue onChange={setSelectedPlatformName}>
                     <List.Dropdown.Section>
+                        {/* Everything except 'common' and 'tealdeer' whose results will always be shown */}
                         {["osx", "linux", "windows", "sunos", "android"].map((platform) => (
                             <List.Dropdown.Item title={platform} value={platform} key={platform} />
                         ))}
                     </List.Dropdown.Section>
                 </List.Dropdown>
             }
-            isLoading={!platforms}
         >
             {selectedPlatforms?.map((platform) => (
                 <List.Section title={platform.name} key={platform.name}>
@@ -133,13 +135,11 @@ export default function TLDRList(): JSX.Element {
     );
 }
 
-function OpenCommandWebsiteAction(props: { page: Page }) {
-    const page = props.page;
+function OpenCommandWebsiteAction({ page }: { page: Page }) {
     return page.url ? <Action.OpenInBrowser title="Open Command Website" url={page.url} /> : null;
 }
 
-function CommandList(props: { page: Page }) {
-    const page = props.page;
+function CommandList({ page }: { page: Page }) {
     return (
         <List navigationTitle={page.command}>
             {page.items?.map((item) => (
@@ -189,9 +189,13 @@ async function parsePage(path: string): Promise<Page> {
     const lines = markdown.split("\n");
 
     for (const line of lines) {
-        if (line.startsWith(">")) subtitle.push(line.slice(2));
-        else if (line.startsWith("`")) commands.push(line.slice(1, -1));
-        else if (line.startsWith("-")) descriptions.push(line.slice(2));
+        if (line.startsWith(">")) {
+            subtitle.push(line.slice(2));
+        } else if (line.startsWith("`")) {
+            commands.push(line.slice(1, -1));
+        } else if (line.startsWith("-")) {
+            descriptions.push(line.slice(2));
+        }
     }
 
     const match = markdown.match(
