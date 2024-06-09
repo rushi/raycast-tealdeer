@@ -20,27 +20,30 @@ const getDir = (value: string) => value.replace(process.env.HOME ?? "", "~");
 
 const CACHE_DIR = resolve(environment.supportPath, "pages");
 
-const PRIMARY_TEALDEER_PATH = "/Users/rushi/.config/tealdeer/pages"; // use tldr --show-paths
+// TODO: Make this a preference
+const TEALDEER_PATH = `${process.env.HOME}/.config/tealdeer/pages`;
 const TEALDEER_CACHE_DIR = CACHE_DIR + "/tealdeer";
 
 async function refreshPages() {
-    await rm(resolve(CACHE_DIR), { recursive: true, force: true });
+    // await rm(resolve(CACHE_DIR), { recursive: true, force: true }); // For testing only
     await showToast(Toast.Style.Animated, "Fetching TLDR Pages...");
     try {
+        await showToast(Toast.Style.Animated, "Fetching TLDR Pages from tldr-pages/tldr/pages");
         await degit("tldr-pages/tldr/pages").clone(CACHE_DIR);
         await showToast(Toast.Style.Success, "TLDR pages fetched!");
     } catch (error) {
         await showToast(Toast.Style.Failure, "Download Failed!", "Please check your internet connection.");
     }
 
-    await showToast(Toast.Style.Animated, "Find custom tealdeer pages...");
+    await showToast(Toast.Style.Animated, "Finding custom tealdeer pages...");
     const symlinkDir = getDir(TEALDEER_CACHE_DIR);
     if (!fs.existsSync(TEALDEER_CACHE_DIR)) {
-        await fs.symlinkSync(PRIMARY_TEALDEER_PATH, TEALDEER_CACHE_DIR);
+        showToast(Toast.Style.Animated, "Linking tealdeer pages...");
+        await fs.symlinkSync(TEALDEER_PATH, TEALDEER_CACHE_DIR);
     }
 
     if (fs.existsSync(TEALDEER_CACHE_DIR)) {
-        await showToast(Toast.Style.Success, `Custom pages linked ${symlinkDir}`);
+        await showToast(Toast.Style.Success, `Custom pages linked in Cache dir`);
     } else {
         await showToast(Toast.Style.Failure, "Error linking pages", `Could not create symlink in ${symlinkDir}`);
     }
